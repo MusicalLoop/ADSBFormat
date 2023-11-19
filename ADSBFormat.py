@@ -108,7 +108,7 @@ def printStats(fltStats, links = True):
     print("Real Time Flight information:\n")
     output1 = f'\tTotal Aircraft: {fltStats[9]}\t\tHighest:  Id: {fltStats[0]}\tCall:  {fltStats[1]}\tAltitude: {fltStats[2]}m'
     output2 = f'\tWith Positions: {fltStats[10]}\t\tFastest:  Id: {fltStats[3]}\tCall:  {fltStats[4]}\tSpeed:    {fltStats[5]}km/h'
-    output3 = f'\tTotal Exluded: {fltStats[11]}\t\tFurthest: Id: {fltStats[6]}\tCall:  {fltStats[7]}\tDistance: {fltStats[8]}km'
+    output3 = f'\t\t\t\t\tFurthest: Id: {fltStats[6]}\tCall:  {fltStats[7]}\tDistance: {fltStats[8]}km'
     
     if links:
         output1 = output1 + f'\t{FLIGHT_LINK}{fltStats[0]}'
