@@ -10,6 +10,7 @@
 # Date:   17th November 2023
 #
 # Version: 0.1    Added option to include Stats
+# Version: 0.2    jOption to Exclude some flights
 #
 ###################################################################
 
@@ -54,9 +55,9 @@ FURT_CALL      = DEFAULT
 FURTHEST       = DEFAULT
 
 
-NUM_AIRCRAFT   = 0
-NUM_POSITIONS  = 0
-NUM_EXLUDED    = 0
+NUM_AIRCRAFT      = 0
+NUM_NO_POSITIONS  = 0
+NUM_EXLUDED       = 0
 
 
 URL = "http://localhost/tar1090/data/aircraft.json"         #Flight Data served up from URL
@@ -82,7 +83,10 @@ STATS_LINK = True            # Include URL Link with Stats? Set to False if NOT 
 FLTS_LINK  = True            # Include URL Link with Flights? Set to False if NOT wanted
 
 #======================================================================================
+# Exclude - list Id / Hex codes to exclude from Flights
+EXCLUDE = ['43bf94', '43bf95', '43bf96']
 
+#======================================================================================
 
 def getDistance(flight_lat, flight_lon):
     dist_f = 0.0
@@ -108,7 +112,7 @@ def printStats(fltStats, links = True):
     print("Real Time Flight information:\n")
     output1 = f'\tTotal Aircraft: {fltStats[9]}\t\tHighest:  Id: {fltStats[0]}\tCall:  {fltStats[1]}\tAltitude: {fltStats[2]}m'
     output2 = f'\tWith Positions: {fltStats[10]}\t\tFastest:  Id: {fltStats[3]}\tCall:  {fltStats[4]}\tSpeed:    {fltStats[5]}km/h'
-    output3 = f'\t\t\t\t\tFurthest: Id: {fltStats[6]}\tCall:  {fltStats[7]}\tDistance: {fltStats[8]}km'
+    output3 = f'\tTotal Exluded: {fltStats[11]}\t\tFurthest: Id: {fltStats[6]}\tCall:  {fltStats[7]}\tDistance: {fltStats[8]}km'
     
     if links:
         output1 = output1 + f'\t{FLIGHT_LINK}{fltStats[0]}'
@@ -118,7 +122,6 @@ def printStats(fltStats, links = True):
     print(output1)
     print(output2)
     print(output3 + '\n\n')
-    #print(f'Num MLAT {fltStats[12]}\n\n')
 
 response = requests.get(URL)                  # Get Flight Information from URL
 
@@ -140,7 +143,7 @@ if response.status_code == 200:               # Success
     furtCl         = 0
     furthest       = 0
     
-    Stats         = [HIGH_ID, HIGH_CALL, HIGHEST, FAST_ID, FAST_CALL, FASTEST, FURT_ID, FURT_CALL, FURTHEST, NUM_AIRCRAFT, NUM_POSITIONS, NUM_EXLUDED]
+    Stats         = [HIGH_ID, HIGH_CALL, HIGHEST, FAST_ID, FAST_CALL, FASTEST, FURT_ID, FURT_CALL, FURTHEST, NUM_AIRCRAFT, NUM_NO_POSITIONS, NUM_EXLUDED]
 
     for i in flights['aircraft']:
         hx       = str(i.get('hex'))
@@ -156,6 +159,8 @@ if response.status_code == 200:               # Success
         lat      = i.get('lat')
         if lat:
             lat = f'{lat:5.2f}'
+        else:
+            NUM_NO_POSITIONS = NUM_NO_POSITIONS + 1
     
         lon      = i.get('lon')
         if lon:
@@ -178,9 +183,11 @@ if response.status_code == 200:               # Success
         flight.append(link)
 
     
-        if call is not None:                                          # Only record flight if it contains a Call Sign
-            if float(dist) > 0.00:
-                schedule.append(flight.copy())               # Add Flight data to the Schedule
+        if hx not in EXCLUDE:                                # Do we exclude this?
+            schedule.append(flight.copy())               # Add Flight data to the Schedule
+            NUM_AIRCRAFT = NUM_AIRCRAFT + 1
+        else:
+            NUM_EXLUDED = NUM_EXLUDED + 1
         
         if alt != "ground":
             if alt > highest:
@@ -202,17 +209,18 @@ if response.status_code == 200:               # Success
         
     
     # Update the Stats:
-    Stats[0] = highId
-    Stats[1] = highCl
-    Stats[2] = highest
-    Stats[3] = fastId
-    Stats[4] = fastCl
-    Stats[5] = fastest
-    Stats[6] = furtId
-    Stats[7] = furtCl
-    Stats[8] = furthest
-    Stats[9] = len(schedule)
-    
+    Stats[0]  = highId
+    Stats[1]  = highCl
+    Stats[2]  = highest
+    Stats[3]  = fastId
+    Stats[4]  = fastCl
+    Stats[5]  = fastest
+    Stats[6]  = furtId
+    Stats[7]  = furtCl
+    Stats[8]  = furthest
+    Stats[9]  = len(schedule)
+    Stats[10] = NUM_NO_POSITIONS
+    Stats[11] = NUM_EXLUDED    
     
     sortedSchedule = sorted(schedule, key=itemgetter(DIST))                        # Sort the Flight Schedule by Distance (Field 7)
 
